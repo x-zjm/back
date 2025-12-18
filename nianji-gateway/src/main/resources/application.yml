@@ -1,0 +1,137 @@
+# 公共配置
+server:
+  servlet:
+    context-path: /
+  port: 8080
+spring:
+  profiles:
+    active: @spring.profiles.active@
+  application:
+    name: nianji-gateway
+  main:
+    web-application-type: reactive
+  config:
+    import:
+      - optional:nacos:${spring.application.name}.yml
+      - optional:nacos:${spring.application.name}-${spring.profiles.active}.yml
+  cloud:
+    gateway:
+      routes:
+        - id: nianji-auth
+          uri: http://localhost:9091
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+
+        - id: nianji-diary
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/diary/**
+          filters:
+            - StripPrefix=1
+
+# 日志级别
+logging:
+  level:
+    root: INFO
+
+# CORS配置
+cors:
+  allowed-origins:
+    - "http://localhost:3000"
+    - "http://127.0.0.1:3000"
+  allowed-methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+  allowed-headers:
+    - "Authorization"
+    - "Content-Type"
+    - "X-Requested-With"
+    - "X-CSRF-TOKEN"
+    - "X-XSRF-TOKEN"
+  exposed-headers:
+    - "X-Auth-Token"
+    - "X-CSRF-TOKEN"
+    - "X-XSRF-TOKEN"
+  allow-credentials: true
+  max-age: 3600
+
+# JWT配置
+jwt:
+  secret: "your-super-secure-jwt-secret-key-at-least-32-characters-long"
+  expiration: 86400
+  refresh-expiration: 604800
+  short-token-minutes: 30
+
+# 安全路径配置
+security:
+  public-paths:
+    - "/api/csrf-token"
+    - "/api/auth/login"
+    - "/api/auth/register"
+    - "/api/auth/verify-email"
+    - "/api/auth/refresh-token"
+    - "/api/auth/security/public-key/**"
+    - "/api/auth/security/health"
+    - "/api/auth/send-reset-password-email"
+    - "/swagger-ui/**"
+    - "/v3/api-docs/**"
+    - "/swagger-resources/**"
+    - "/webjars/**"
+    - "/actuator/health"
+    - "/actuator/info"
+  user-paths:
+    - "/user/**"
+    - "/profile/**"
+  admin-paths:
+    - "/admin/**"
+    - "/system/**"
+
+# 限流
+gateway-rate-limit:
+  enabled: true
+  redis-key-prefix: "nianji:gateway:rate_limit"
+  defaults:
+    limit: 100
+    window: 1m
+  rules:
+    - path: "/api/auth/login"
+      limit: 10
+      window: 1m
+      type: IP
+      description: "登录防暴力破解"
+      enabled: true
+    - path: "/api/auth/register"
+      limit: 5
+      window: 1h
+      type: IP
+      description: "注册防刷"
+      enabled: true
+    - path: "/api/auth/security/public-key/**"
+      limit: 100
+      window: 1d
+      type: USER
+      description: "获取RSA公钥"
+      enabled: true
+    - path: "/api/auth/**"
+      limit: 30
+      window: 1m
+      type: IP
+      description: "其他认证相关接口"
+      enabled: true
+    - path: "/api/diary/**"
+      limit: 50
+      window: 1m
+      type: IP
+      description: "日记相关接口"
+      enabled: true
+    - path: "/api/admin/**"
+      limit: 1000
+      window: 1m
+      type: USER  # 基于用户ID限流
+      description: "管理接口"
+      enabled: true

@@ -1,0 +1,108 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: nianji-diary
+  config:
+    import: optional:nacos:${spring.application.name}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        namespace: public
+        group: DEFAULT_GROUP
+      config:
+        server-addr: localhost:8848
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        namespace: public
+        shared-configs:
+          - data-id: common-config.yaml
+            group: DEFAULT_GROUP
+            refresh: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/nianji_diary?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 50MB
+      enabled: true
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: nianji-diary-group
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    properties:
+      spring.json.trusted.packages: "*"
+
+# MyBatis Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+app:
+  upload:
+    path: ${UPLOAD_PATH:/data/nianji/upload/}
+    image-max-size: 5242880    # 5MB
+    video-max-size: 20971520   # 20MB
+    allowed-image-types: image/jpeg,image/png,image/gif,image/webp
+    allowed-video-types: video/mp4,video/avi,video/mov,video/wmv
+
+logging:
+  level:
+    com.nianji.diary: DEBUG
+    com.baomidou.mybatisplus: DEBUG
+
+
+rate-limit:
+  enabled: true
+  default-config:
+    limit: 100
+    window: 60
+  custom-configs:
+    # Diary 模块配置
+    diary_create_ip:
+      limit: 10
+      window: 60
+    diary_create_user:
+      limit: 5
+      window: 60
+    diary_update_ip:
+      limit: 20
+      window: 60
+    diary_update_user:
+      limit: 10
+      window: 60
+    diary_delete_ip:
+      limit: 5
+      window: 60
+    diary_delete_user:
+      limit: 3
+      window: 60
+    diary_query_ip:
+      limit: 50
+      window: 60
+    diary_query_user:
+      limit: 30
+      window: 60
+    diary_list_ip:
+      limit: 30
+      window: 60
+    diary_list_user:
+      limit: 20
+      window: 60

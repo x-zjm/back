@@ -1,0 +1,125 @@
+server:
+  port: 9091
+  servlet:
+    context-path: /
+
+spring:
+  profiles:
+    active: @spring.profiles.active@
+  application:
+    name: nianji-auth
+  config:
+    import: optional:nacos:${spring.application.name}
+  task:
+    scheduling:
+      enabled: true
+
+# MyBatis Plus 配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.nianji.auth.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    use-generated-keys: true
+    use-column-label: true
+
+logging:
+  level:
+    com.nianji.auth: DEBUG
+    com.nianji.common: DEBUG
+#    org.springframework.context: DEBUG
+#    com.baomidou.mybatisplus: DEBUG
+#    org.springframework: DEBUG
+#    org.apache.tomcat: DEBUG
+#    org.apache.catalina: DEBUG
+#    org.springframework.security: DEBUG
+#    org.springframework.data.redis: DEBUG
+#    io.lettuce.core: DEBUG
+#    org.apache.commons.pool2: DEBUG
+
+# application.yml
+rate-limit:
+  enabled: true
+  default-config:
+    limit: 100
+    window: 60
+  custom-configs:
+    # 认证模块配置
+    login_ip:
+      limit: 10
+      window: 60
+    login_user:
+      limit: 5
+      window: 60
+    register_ip:
+      limit: 5
+      window: 3600
+    refresh_token:
+      limit: 20
+      window: 3600
+    verify_code_ip:
+      limit: 10
+      window: 3600
+    verify_code_target:
+      limit: 3
+      window: 3600
+
+# JWT 配置
+jwt:
+  secret: "your-super-secure-jwt-secret-key-at-least-32-characters-long"
+  expiration: 86400        # 24小时 (秒)
+  refresh-expiration: 604800 # 7天 (秒)
+  issuer: "nianji-app"
+
+security:
+  login:
+    # 最大登录尝试次数
+    max-login-attempts: 5
+    # 锁定时间（分钟）
+    lock_duration_minutes: 30
+    # 同一IP最大尝试次数
+    ip_max_attempts: 20
+    # IP锁定时间
+    ip_lock_duration_minutes: 60
+  encryption:
+    enabled: true
+    algorithms:
+      - RSA_ECB_OAEP
+      - AES_GCM
+    default-algorithm: RSA_ECB_OAEP
+    default-key-version: "v1"
+    # 可选的全局密钥配置
+#    rsa-public-key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2KB//0QAF5XRuX9w7zZg8MmOF+1xATcBmLndKwca7vGvmW+vpqv9HIWolCdAGsKSKxw2AlJ5xuesMM0sw9W4u21oHPhUSNueZ4TtLgMEYvacr05ivGaKagEmJBT6zX2S1HvcnvJTTeJf1CofDqPLHSAWq7fAkhRdtCpHi+z21vYG2BBKTmR2yKHzdMG3WZknOC+G2jce6OhfV9JfUfCnm9D2qLgOD4BPc220Ftl8uL1KbH2D8zAgcqnINgYY8IlIXNEL8syr6pSYNBc5rxLIT24wnRyKXh/+q3B9NLXuDNf5kYrP6wB8T5mivt286t2XmhqGCuTYhhhNdtGvkjDAxwIDAQAB"
+#    rsa-private-key: "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDYoH//RAAXldG5f3DvNmDwyY4X7XEBNwGYud0rBxru8a+Zb6+mq/0chaiUJ0AawpIrHDYCUnnG56wwzSzD1bi7bWgc+FRI255nhO0uAwRi9pyvTmK8ZopqASYkFPrNfZLUe9ye8lNN4l/UKh8Oo8sdIBart8CSFF20KkeL7PbW9gbYEEpOZHbIofN0wbdZmSc4L4baNx7o6F9X0l9R8Keb0PaouA4PgE9zbbQW2Xy4vUpsfYPzMCByqcg2BhjwiUhc0QvyzKvqlJg0FzmvEshPbjCdHIpeH/6rcH00te4M1/mRis/rAHxPmaK+3bzq3ZeaGoYK5NiGGE120a+SMMDHAgMBAAECggEABUdb9x90FR8MfkWxvdKIaDWxJboef9YUTuFwl0TUDjCLg+Sp1hjo0RIcuod+U2icYTqNwl66IvOwSXwmdBs4JjETUWlnvGLFqGYf1XgzWioCRW9Wjpq9Ero2cLimJ+3AbzcZeDIVf5ddmHDyUswA/hOzGbofki+23NYO6kT6+t/2arWWEal155PcJrXhIBNsX7dCtn0UOskWnQW5Do7NMmhFcCbnZcLR31GpthxFu679tvhsdL+w59Znl1KLkRX0JS3sk9o7z4lBF23pZf6x4BcnV5qTZdzRhW0l+2wmSXAiIJRZEitGiwE7ZsbSeDrIIUFEoEE7jF2/TH2RA1QYyQKBgQDfreCliSjKM2FbPCMGP7Rjgpsf7NFSECIcYGtJGTJEcDuE2RS7DSz8mLGjwtBlfMSQ4gBeSaG/TjYZwj96ZwPS99ePh/0s6ICOhvLV09JwB8gr7MMM3n5Tpw7WJSXbSArb/nUPfplszHc0vc+XzQQpo9Lxn6nCtiBNsFSyhN+52wKBgQD37cCXQ/IqabA1EGEpp4Lot2bO16FRHdAi43i1CNYmtBW1te9hAkpn1ODEitxkWIyeS8oF5SoWMoIzOZCdonHdaH1zy/uh/ZRWgtKBC862aSWMV45jnrH1CWdboMYkJbc5WkMsOQ0EkR3gTApCH2l7a+BdgyNkbIj267MW4JM2hQKBgQCnxh8bav7ac6GRslC/Did7AGrkjlgPSqSbTkMKqEiJBvnN0pn3F5HnwYx0vdpcVTKHTc1i663T9ZEkzwuX/w7iPh5EvYbMGXTb8yLP+jr85wlg0Q0YaQauLj81ptV3XdkvW/Rn89iWv+Kl/71nKlL1/LhrngvSTZN7UkilQn8hQwKBgQDZVs+NCyBAM/QnIFu8sz7cGOKEEp00ycjKvNP1B3EL7rRVXc8iIGrviLsdMImxYbqrjc7kyhbR7KcclqsCtQPSTyYim7/UKsKd8ALu41XrrFMhKyQEinqATyUPOupXh8SN/2WBX+XcigZBuQcJHhZO/qtp7mrZPxf2NXsCZA5JLQKBgHFhTSI3neRI6+m0j3yCtDtp4fa45dVl2aTWPbvzJssV5UslEsCYEGCw4JX4o8x3OPyswMmZlDv32HnP0DqMBHfV6hWMJpZGc3+khv4wWAozOPwbQP4LHb0tre4hyzKlEO/o/9O5wccgI/LGISmba9XvvYzGtk1aRg0FOppUd63o"
+#    aes-key: "SNprGQi/tMdyK2QqSmSPVZlWS8HRwCOjnRz0JWL0iR4="
+    rotation-interval-hours: 24
+    auto-rotation: true
+    key-cleanup:
+      keep-versions: 5
+      cleanup-interval-hours: 6
+    monitoring:
+      enabled: true
+      metrics-prefix: "security.encryption"
+
+auth:
+  mode: LIMITED_SESSIONS  # SINGLE_SESSION, MULTI_SESSION, LIMITED_SESSIONS
+  max-sessions: 3         # 限制会话数量模式下的最大会话数
+  session-timeout: 7200   # 会话超时时间（秒）
+  enable-session-eviction: true  # 是否允许新登录踢出旧会话
+
+  sso:
+    enabled: false        # 是否启用SSO
+    global-session-timeout: 7200
+    authorization-code-timeout: 300
+
+cache:
+  enabled: true
+#  default-expire: 1800
+#  custom-expires:
+#    # 使用 CacheNames 进行配置
+#    user:info: 7200        # 用户信息2小时
+#    auth:token: 14400      # token 4小时
+#    captcha:image: 600     # 图片验证码10分钟
+#    # 支持通配符配置
+#    user: 3600             # 所有用户相关缓存1小时
+#    auth: 7200             # 所有认证相关缓存2小时

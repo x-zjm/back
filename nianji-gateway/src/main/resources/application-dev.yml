@@ -1,0 +1,12 @@
+security:
+  cookie:
+    cookie-expire: 1440
+    same-site: Strict
+    secure: false
+
+logging:
+  level:
+    com.nianji.gateway: DEBUG
+#    org.springframework.security: DEBUG
+#    org.springframework.cloud.gateway: DEBUG
+#    org.springframework.web: DEBUG
