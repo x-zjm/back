@@ -34,11 +34,13 @@
 
         <mybatis-plus.version>3.5.7</mybatis-plus.version>
         <hutool.version>5.8.40</hutool.version>
-        <mysql-connector-java>8.0.33</mysql-connector-java>
+        <mysql-connector-java.version>8.0.33</mysql-connector-java.version>
         <logback.version>1.5.14</logback.version>
+        <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>
         <kafka.version>4.1.0</kafka.version>
         <redisson.version>3.27.0</redisson.version>
         <nimbus.version>9.37.3</nimbus.version>
+        <testng.version>7.7.1</testng.version>
 
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -97,7 +99,7 @@
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
-                <version>${mysql-connector-java}</version>
+                <version>${mysql-connector-java.version}</version>
             </dependency>
 
             <!-- 强制指定 Logback 安全版本 -->
@@ -110,6 +112,13 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-core</artifactId>
                 <version>${logback.version}</version>
+            </dependency>
+
+            <!-- Logstash Logback Encoder -->
+            <dependency>
+                <groupId>net.logstash.logback</groupId>
+                <artifactId>logstash-logback-encoder</artifactId>
+                <version>${logstash-logback-encoder.version}</version>
             </dependency>
 
             <!-- 强制指定 Kafka 安全版本 -->
@@ -131,16 +140,15 @@
                 <artifactId>nimbus-jose-jwt</artifactId>
                 <version>${nimbus.version}</version>
             </dependency>
+            
+            <!-- testng -->
+            <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>${testng.version}</version>
+                <scope>test</scope>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>

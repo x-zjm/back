@@ -2,7 +2,9 @@ package com.nianji.common.interceptor;
 
 import com.nianji.common.constant.CommonConstants;
 import com.nianji.common.context.CustomRequestContext;
+import com.nianji.common.context.MdcContextInitializer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -10,11 +12,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * 增强的请求拦截器
+ * 增强的请求拦截器 - 集成MDC上下文支持
  */
 @Slf4j
 @Component
 public class RequestInterceptor implements HandlerInterceptor {
+
+    @Autowired
+    private MdcContextInitializer mdcContextInitializer;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -24,6 +29,8 @@ public class RequestInterceptor implements HandlerInterceptor {
                 request.getMethod()
         );
 
+        // 初始化MDC上下文
+        mdcContextInitializer.initializeMdcContext();
 
         // 将请求ID设置到响应头中
         response.setHeader(CommonConstants.REQUEST_ID_HEADER, CustomRequestContext.getRequestId());
@@ -50,6 +57,8 @@ public class RequestInterceptor implements HandlerInterceptor {
         } finally {
             // 清除线程上下文
             CustomRequestContext.clear();
+            // 清除MDC上下文
+            mdcContextInitializer.clearMdcContext();
         }
     }
 }
