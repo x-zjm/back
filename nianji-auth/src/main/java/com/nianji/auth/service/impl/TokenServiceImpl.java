@@ -96,34 +96,42 @@ public class TokenServiceImpl implements TokenService {
             return BizResult.fail(ErrorCode.Client.TOKEN_INVALID);
         }
 
-        // 4. 生成新令牌
+        // 4. 获取旧access token
+        String oldAccessToken = cacheUtil.getString(CacheKeys.Auth.accessToken(userId));
+        
+        // 5. 生成新令牌
         String newAccessToken = jwtGenerator.generateAccessToken(username, userId);
         String newRefreshToken = jwtGenerator.generateRefreshToken(username, userId);
 
-        // 5. 获取旧token的元数据用于新token缓存
+        // 6. 获取旧token的元数据用于新token缓存
         RefreshTokenMetadata oldMetadata =
                 refreshTokenCacheService.getMetadata(refreshToken);
 
-        // 6. 更新refresh token缓存
+        // 7. 更新refresh token缓存
         refreshTokenContext.setUserId(userId);
         refreshTokenContext.setRefreshToken(newRefreshToken);
         refreshTokenContext.setClientIp(ObjectUtil.isEmpty(oldMetadata) ? "unknown" : oldMetadata.getLoginIp());
         refreshTokenContext.setUserAgent(ObjectUtil.isEmpty(oldMetadata) ? "unknown" : oldMetadata.getUserAgent());
         refreshTokenCacheService.cacheRefreshToken(refreshTokenContext);
 
-        // 7. 撤销旧的refresh token
+        // 8. 撤销旧的refresh token
         refreshTokenCacheService.revokeRefreshToken(refreshToken);
 
-        // 8. 将旧的refresh token加入黑名单
+        // 9. 将旧的refresh token加入黑名单
         addTokenToBlacklist(refreshToken, "refreshed");
+
+        // 10. 将旧的access token加入黑名单
+        if (oldAccessToken != null) {
+            addTokenToBlacklist(oldAccessToken, "refreshed");
+        }
 
         refreshTokenContext.setNewRefreshToken(newRefreshToken);
         refreshTokenContext.setNewAccessToken(newAccessToken);
 
-        // 9. 更新access token缓存
+        // 11. 更新access token缓存
         cacheLoginToken(refreshTokenContext);
 
-        // 10. 构建响应
+        // 12. 构建响应
         LoginVO response = buildTokenResponse(refreshTokenContext);
 
         long endTime = System.currentTimeMillis();

@@ -36,7 +36,7 @@ public class EncryptionTestController {
      * @return 包含各种算法加密结果的映射表
      */
     @PostMapping("/encrypt")
-    public BizResult<Map<String, Object>> encryptTest(@RequestParam String plaintext) {
+    public BizResult<Map<String, Object>> encryptTest(@RequestBody String plaintext) {
         try {
             Map<String, Object> result = new HashMap<>();
             

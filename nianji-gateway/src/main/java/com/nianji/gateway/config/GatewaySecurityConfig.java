@@ -19,6 +19,7 @@ import org.springframework.security.web.server.csrf.CookieServerCsrfTokenReposit
 import org.springframework.security.web.server.csrf.ServerCsrfTokenRepository;
 import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
@@ -27,6 +28,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Configuration
@@ -37,10 +39,19 @@ public class GatewaySecurityConfig {
     private final SecurityProperties securityProperties;
     private final CorsProperties corsProperties;
     private final JwtAuthenticationManager jwtAuthenticationManager;
+    
+    // 使用预编译的路径匹配器提高性能
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+    
+    // 缓存公共路径列表以提高访问速度
+    private volatile List<String> cachedPublicPaths = new CopyOnWriteArrayList<>();
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         log.info("初始化网关安全配置，公开路径: {}", securityProperties.getPublicPaths());
+        
+        // 初始化缓存的公共路径
+        updateCachedPublicPaths();
 
         // 创建JWT认证过滤器
         JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtAuthenticationManager);
@@ -57,18 +68,33 @@ public class GatewaySecurityConfig {
                 )
                 .build();
     }
+    
+    /**
+     * 更新缓存的公共路径列表
+     */
+    private void updateCachedPublicPaths() {
+        this.cachedPublicPaths = new CopyOnWriteArrayList<>(securityProperties.getPublicPaths());
+    }
 
     /**
      * CSRF保护匹配器
      */
     private Mono<ServerWebExchangeMatcher.MatchResult> csrfProtectionMatcher(ServerWebExchange exchange) {
-        // String path = exchange.getRequest().getPath().value();
+        String path = exchange.getRequest().getPath().value();
         String method = exchange.getRequest().getMethod().name();
+
+        // 对公开路径禁用CSRF保护（使用缓存列表提高性能）
+        for (String publicPath : cachedPublicPaths) {
+            if (pathMatcher.match(publicPath, path)) {
+                return ServerWebExchangeMatcher.MatchResult.notMatch();
+            }
+        }
 
         // 对状态变更的请求启用CSRF保护（POST, PUT, PATCH, DELETE）
         if (method.matches("POST|PUT|PATCH|DELETE")) {
             return ServerWebExchangeMatcher.MatchResult.match();
         }
+
         return ServerWebExchangeMatcher.MatchResult.notMatch();
     }
 
