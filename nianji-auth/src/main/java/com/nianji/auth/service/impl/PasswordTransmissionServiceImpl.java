@@ -563,6 +563,36 @@ public class PasswordTransmissionServiceImpl implements PasswordTransmissionServ
         return conditionsMet >= 3;
     }
 
+    /**
+     * 测试用加密方法
+     * <p>
+     * 该方法仅供测试使用，用于在本地环境中模拟前端加密过程。
+     *
+     * @param plaintext 明文
+     * @param algorithm 加密算法
+     * @return 加密后的密文
+     */
+    @Override
+    public String encryptForTest(String plaintext, EncryptionAlgorithm algorithm) {
+        try {
+            // 获取加密服务
+            EncryptionService encryptionService = encryptionServiceFactory.getService(algorithm);
+            
+            // 获取公钥信息
+            PublicKeyInfo publicKeyInfo = getPublicKeyInfo(algorithm);
+            
+            // 获取用于加密的密钥（根据算法类型确定使用哪个字段）
+            String key = algorithm.name().startsWith("RSA") ?
+                    publicKeyInfo.getPublicKey() : publicKeyInfo.getKey();
+            
+            // 执行加密
+            return encryptionService.encrypt(plaintext, key);
+        } catch (Exception e) {
+            log.error("测试加密失败 - 算法: {}, 明文长度: {}", algorithm, plaintext.length(), e);
+            throw ExceptionFactory.crypto(ErrorCode.System.ENCRYPT_FAILED, "测试加密失败: " + e.getMessage(), e);
+        }
+    }
+
     // ============ 私有工具方法 ============
 
     /**

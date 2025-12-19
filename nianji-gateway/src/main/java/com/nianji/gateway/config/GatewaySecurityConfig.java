@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.json.JSONUtil;
 import com.nianji.gateway.filter.JwtAuthenticationFilter;
+import com.nianji.gateway.manager.JwtAuthenticationManager;
 import com.nianji.gateway.property.CorsProperties;
 import com.nianji.gateway.property.SecurityProperties;
 import lombok.RequiredArgsConstructor;
@@ -35,11 +36,14 @@ public class GatewaySecurityConfig {
 
     private final SecurityProperties securityProperties;
     private final CorsProperties corsProperties;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationManager jwtAuthenticationManager;
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         log.info("初始化网关安全配置，公开路径: {}", securityProperties.getPublicPaths());
+
+        // 创建JWT认证过滤器
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtAuthenticationManager);
 
         return http
                 .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository())
@@ -47,33 +51,10 @@ public class GatewaySecurityConfig {
                         .requireCsrfProtectionMatcher(this::csrfProtectionMatcher))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
-                .authenticationManager(authentication -> {
-                    if (authentication != null && authentication.isAuthenticated()) {
-                        return Mono.just(authentication);
-                    }
-                    return Mono.empty();
-                })
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(securityProperties.getPublicPaths().toArray(new String[0])).permitAll()
                         .anyExchange().authenticated()
                 )
-                // .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
-                // .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                // .logout(ServerHttpSecurity.LogoutSpec::disable)
-                // // 设置未认证时的处理
-                // .exceptionHandling(exceptionHandling -> exceptionHandling
-                //         .authenticationEntryPoint((exchange, ex) -> {
-                //             log.warn("🚫 未认证访问被拦截 - 路径: {}, 错误: {}",
-                //                     exchange.getRequest().getPath().value(), ex.getMessage());
-                //             return unauthorized(exchange, "访问被拒绝: 需要认证");
-                //         })
-                //         .accessDeniedHandler((exchange, denied) -> {
-                //             log.warn("🚫 权限不足访问被拦截 - 路径: {}",
-                //                     exchange.getRequest().getPath().value());
-                //             return forbidden(exchange, "权限不足");
-                //         })
-                // )
-
                 .build();
     }
 
@@ -151,30 +132,4 @@ public class GatewaySecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
-    // private Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
-    //     exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-    //     exchange.getResponse().getHeaders().add("Content-Type", "application/json");
-    //
-    //     String responseBody = String.format(
-    //             "{\"error\":\"Unauthorized\",\"message\":\"%s\",\"path\":\"%s\",\"timestamp\":%d}",
-    //             message, exchange.getRequest().getPath().value(), System.currentTimeMillis()
-    //     );
-    //
-    //     DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(responseBody.getBytes());
-    //     return exchange.getResponse().writeWith(Mono.just(buffer));
-    // }
-    //
-    // private Mono<Void> forbidden(ServerWebExchange exchange, String message) {
-    //     exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-    //     exchange.getResponse().getHeaders().add("Content-Type", "application/json");
-    //
-    //     String responseBody = String.format(
-    //             "{\"error\":\"Forbidden\",\"message\":\"%s\",\"path\":\"%s\",\"timestamp\":%d}",
-    //             message, exchange.getRequest().getPath().value(), System.currentTimeMillis()
-    //     );
-    //
-    //     DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(responseBody.getBytes());
-    //     return exchange.getResponse().writeWith(Mono.just(buffer));
-    // }
 }

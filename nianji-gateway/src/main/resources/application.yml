@@ -78,6 +78,7 @@ security:
     - "/api/auth/security/public-key/**"
     - "/api/auth/security/health"
     - "/api/auth/send-reset-password-email"
+    - "/api/auth/encryption/test/**"
     - "/swagger-ui/**"
     - "/v3/api-docs/**"
     - "/swagger-resources/**"

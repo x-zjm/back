@@ -27,15 +27,16 @@ public class TestSecurityKeyController {
     /**
      * 健康检查 - 验证认证业务加密服务状态
      */
-    @GetMapping("/en")
+    @GetMapping("/health")
     public BizResult<Map<String, String>> healthCheck(@RequestParam String data) {
         try {
             log.debug("认证业务加密服务健康检查通过");
-            // return passwordTransmissionService.healthCheck(data);
-            return null;
+            // 执行实际的健康检查
+            String healthResult = passwordTransmissionService.healthCheck(data);
+            return BizResult.success(Map.of("result", healthResult));
         } catch (Exception e) {
             log.error("认证业务加密服务健康检查异常", e);
-            return BizResult.fail("SECURITY_ERROR", "加密服务异常");
+            return BizResult.fail("SECURITY_ERROR", "加密服务异常: " + e.getMessage());
         }
     }
 }
