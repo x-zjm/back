@@ -79,9 +79,13 @@ public class AlgorithmKeyPair {
                 .valid(this.valid);
 
         if (this.algorithm.name().startsWith("RSA")) {
+            // 对于RSA算法，返回公钥
             builder.publicKey(this.publicKey);
         } else if (this.algorithm.name().startsWith("AES")) {
-            builder.key(this.symmetricKey);
+            // 对于AES算法，不应该返回对称密钥，因为这是敏感信息
+            // 仅返回算法信息，不包含实际的密钥
+            builder.publicKey(null); // AES没有公钥概念
+            builder.key(null); // 不返回对称密钥，避免安全风险
         }
 
         return builder.build();

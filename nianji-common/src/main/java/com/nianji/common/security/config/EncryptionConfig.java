@@ -9,6 +9,7 @@ import java.util.*;
 
 /**
  * 加解密配置
+ * 注意：敏感密钥信息不应明文存储在配置文件中，应使用外部密钥管理系统或配置中心的加密功能
  */
 @Data
 @Component
@@ -36,18 +37,24 @@ public class EncryptionConfig {
     private String defaultKeyVersion = "v1";
 
     /**
-     * RSA公钥（Base64编码）
+     * RSA公钥（Base64编码）- 仅用于开发测试，生产环境应使用外部密钥管理系统
+     * @deprecated 不推荐在配置文件中明文存储，将在后续版本中移除
      */
+    @Deprecated
     private String rsaPublicKey;
 
     /**
-     * RSA私钥（Base64编码）
+     * RSA私钥（Base64编码）- 仅用于开发测试，生产环境应使用外部密钥管理系统
+     * @deprecated 不推荐在配置文件中明文存储，将在后续版本中移除
      */
+    @Deprecated
     private String rsaPrivateKey;
 
     /**
-     * AES密钥（Base64编码）
+     * AES密钥（Base64编码）- 仅用于开发测试，生产环境应使用外部密钥管理系统
+     * @deprecated 不推荐在配置文件中明文存储，将在后续版本中移除
      */
+    @Deprecated
     private String aesKey;
 
     /**

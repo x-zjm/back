@@ -1,5 +1,6 @@
 package com.nianji.auth.controller;
 
+import com.nianji.common.errorcode.ErrorCode;
 import com.nianji.common.reqres.BizResult;
 import com.nianji.common.security.enums.EncryptionAlgorithm;
 import com.nianji.common.security.model.PublicKeyInfo;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.View;
 
 import java.util.Map;
 
@@ -53,7 +55,7 @@ public class SecurityKeyController {
 
         } catch (Exception e) {
             log.error("获取公钥信息失败", e);
-            return BizResult.fail("GET_PUBLIC_KEY_FAILED", "获取公钥信息失败");
+            return BizResult.fail(ErrorCode.System.CRYPTO_ERROR, "获取公钥信息失败");
         }
     }
 
@@ -63,7 +65,7 @@ public class SecurityKeyController {
      * 该接口返回指定加密算法的公钥信息，用于特定算法需求的场景。
      *
      * @param algorithm
-     *         加密算法，如 RSA_ECB_OAEP、AES_GCM 等
+     *         加密算法，如 RSA_ECB_OAEP 等
      * @return 包含指定算法公钥信息的成功结果
      */
     @GetMapping("/public-key/{algorithm}")
@@ -74,7 +76,7 @@ public class SecurityKeyController {
             return BizResult.success(publicKeyInfo);
         } catch (Exception e) {
             log.error("获取算法公钥信息失败 - 算法: {}", algorithm, e);
-            return BizResult.fail("GET_ALGORITHM_PUBLIC_KEY_FAILED", "获取算法公钥信息失败: " + algorithm);
+            return BizResult.fail(ErrorCode.System.CRYPTO_ERROR, "获取算法公钥信息失败: " + algorithm);
         }
     }
 
@@ -101,12 +103,12 @@ public class SecurityKeyController {
             String encryptedPassword = request.get("encryptedPassword");
 
             if (encryptedPassword == null || encryptedPassword.trim().isEmpty()) {
-                return BizResult.fail("INVALID_REQUEST", "加密密码不能为空");
+                return BizResult.fail(ErrorCode.Client.PARAM_ERROR, "加密密码不能为空");
             }
 
             // 验证加密数据格式
             if (!passwordTransmissionService.validateEncryptedData(encryptedPassword)) {
-                return BizResult.fail("INVALID_ENCRYPTED_DATA", "加密数据格式无效");
+                return BizResult.fail(ErrorCode.Client.PARAM_FORMAT_ERROR, "加密数据格式无效");
             }
 
             // 执行解密
@@ -123,7 +125,7 @@ public class SecurityKeyController {
 
         } catch (Exception e) {
             log.error("密码解密失败", e);
-            return BizResult.fail("DECRYPT_PASSWORD_FAILED", "密码解密失败: " + e.getMessage());
+            return BizResult.fail(ErrorCode.System.CRYPTO_ERROR, "密码解密失败: " + e.getMessage());
         }
     }
 
@@ -147,7 +149,7 @@ public class SecurityKeyController {
             String encryptedPassword = request.get("encryptedPassword");
 
             if (encryptedPassword == null || encryptedPassword.trim().isEmpty()) {
-                return BizResult.fail("INVALID_REQUEST", "加密密码不能为空");
+                return BizResult.fail(ErrorCode.System.DECRYPT_FAILED, "加密密码不能为空");
             }
 
             // 执行解密
@@ -165,7 +167,7 @@ public class SecurityKeyController {
 
         } catch (Exception e) {
             log.error("密码解密失败 - 算法: {}", algorithm, e);
-            return BizResult.fail("DECRYPT_PASSWORD_FAILED", "密码解密失败: " + e.getMessage());
+            return BizResult.fail(ErrorCode.System.DECRYPT_FAILED, "密码解密失败: " + e.getMessage());
         }
     }
 
@@ -186,7 +188,7 @@ public class SecurityKeyController {
             return BizResult.success(healthStatus);
         } catch (Exception e) {
             log.error("健康检查异常", e);
-            return BizResult.fail("HEALTH_CHECK_FAILED", "健康检查异常: " + e.getMessage());
+            return BizResult.fail(ErrorCode.System.DECRYPT_FAILED, "健康检查异常: " + e.getMessage());
         }
     }
 
@@ -207,7 +209,7 @@ public class SecurityKeyController {
             return passwordTransmissionService.enhancedHealthCheck(testData);
         } catch (Exception e) {
             log.error("增强健康检查异常", e);
-            return BizResult.fail("ENHANCED_HEALTH_CHECK_FAILED", "增强健康检查异常: " + e.getMessage());
+            return BizResult.fail(ErrorCode.System.SYSTEM_ERROR, "增强健康检查异常: " + e.getMessage());
         }
     }
 
@@ -226,7 +228,7 @@ public class SecurityKeyController {
             return BizResult.success(status);
         } catch (Exception e) {
             log.error("获取服务状态失败", e);
-            return BizResult.fail("GET_STATUS_FAILED", "获取服务状态失败");
+            return BizResult.fail(ErrorCode.System.SYSTEM_ERROR, "获取服务状态失败");
         }
     }
 
@@ -245,7 +247,7 @@ public class SecurityKeyController {
             return BizResult.success(algorithms);
         } catch (Exception e) {
             log.error("获取支持算法列表失败", e);
-            return BizResult.fail("GET_ALGORITHMS_FAILED", "获取算法列表失败");
+            return BizResult.fail(ErrorCode.System.CRYPTO_ERROR, "获取算法列表失败");
         }
     }
 
@@ -272,11 +274,11 @@ public class SecurityKeyController {
             @RequestBody Map<String, String> encryptedPasswords) {
         try {
             if (encryptedPasswords == null || encryptedPasswords.isEmpty()) {
-                return BizResult.fail("INVALID_REQUEST", "密码列表不能为空");
+                return BizResult.fail(ErrorCode.Client.PARAM_ERROR, "密码列表不能为空");
             }
 
             if (encryptedPasswords.size() > 100) {
-                return BizResult.fail("BATCH_SIZE_EXCEEDED", "批量解密数量超出限制");
+                return BizResult.fail(ErrorCode.Business.RESOURCE_LIMIT_EXCEEDED, "批量解密数量超出限制");
             }
 
             // 执行批量解密
@@ -299,7 +301,7 @@ public class SecurityKeyController {
 
         } catch (Exception e) {
             log.error("批量解密失败", e);
-            return BizResult.fail("BATCH_DECRYPT_FAILED", "批量解密失败: " + e.getMessage());
+            return BizResult.fail(ErrorCode.System.DECRYPT_FAILED, "批量解密失败: " + e.getMessage());
         }
     }
 
@@ -319,7 +321,7 @@ public class SecurityKeyController {
             String password = request.get("password");
 
             if (password == null) {
-                return BizResult.fail("INVALID_REQUEST", "密码不能为空");
+                return BizResult.fail(ErrorCode.Client.PARAM_ERROR, "密码不能为空");
             }
 
             boolean isValid = passwordTransmissionService.validatePasswordStrength(password);
@@ -334,7 +336,7 @@ public class SecurityKeyController {
 
         } catch (Exception e) {
             log.error("密码强度验证失败", e);
-            return BizResult.fail("VALIDATE_PASSWORD_STRENGTH_FAILED", "密码强度验证失败");
+            return BizResult.fail(ErrorCode.Business.BUSINESS_ERROR, "密码强度验证失败");
         }
     }
 
@@ -353,7 +355,7 @@ public class SecurityKeyController {
             return BizResult.success(encryptionInfo);
         } catch (Exception e) {
             log.error("获取加密信息失败", e);
-            return BizResult.fail("GET_ENCRYPTION_INFO_FAILED", "获取加密信息失败");
+            return BizResult.fail(ErrorCode.System.SYSTEM_ERROR, "获取加密信息失败");
         }
     }
 
